@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/SampleScene.unity
+    guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/TicTacToe/Start Screen.unity
+    guid: e5c56808a9634414c9650f379e8dfa0b
+  - enabled: 1
+    path: Assets/TicTacToe/TicTacToe.unity
+    guid: ecb270f9bae2afd4bae163e71ec7d91b
+  m_configObjects: {}
