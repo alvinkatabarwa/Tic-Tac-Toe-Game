@@ -1,96 +1,155 @@
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class GAMEMANAGER : MonoBehaviour
 {
-    public Button[] Tiles; // the nine buttons in the grid
-    private string currentPlayer = "X"; //  whose turn it is
-    public Text winnercongrats; //  displays winner
-    public GameObject winnerPanel; // show when someone wins
+    public int WhoseTurn; // 0 = o, 1 = x
+    public int turnCount;
+    public Sprite[] PlayerIcons; // X and O images
+    public Button[] tictactoeSpaces;
+    public GameObject strikeThrough; 
+    private GameObject currentStrikethrough;
+    
+    //
 
-    void Start()
+    private int[,] winningCombinations = new int[,]
     {
-        ResetBoard(); 
+        { 0, 1, 2 }, { 3, 4, 5 }, { 6, 7, 8 }, // the possible combinations for the rows
+        { 0, 3, 6 }, { 1, 4, 7 }, { 2, 5, 8 }, // same for the Columns
+        { 0, 4, 8 }, { 2, 4, 6 }  // same for the Diagonals
+    };
+
+    private void Start()
+    {
+        GameSetup();
     }
 
-    public void OnGridClick(Button button)
+    void GameSetup()
     {
-        Text buttonText = button.GetComponentInChildren<Text>();
-
-        // make sure the button is not selected already
-        if (buttonText.text == "")
+        WhoseTurn = 0;
+        turnCount = 0;
+        if (currentStrikethrough != null)
         {
-            buttonText.text = currentPlayer; // Set X or O
-            button.interactable = false; // no more clicks on the grid
+            Destroy(currentStrikethrough);
+        }
 
-            if (CheckWinner()) // Check if current player won
+        for (int i = 0; i < tictactoeSpaces.Length; i++) //
+        {
+            tictactoeSpaces[i].interactable = true;
+            tictactoeSpaces[i].GetComponent<Image>().sprite = null;
+        }
+    }
+
+    public void TicTacToeButton(int WhichNumber)
+    {
+        if (WhichNumber < 0 || WhichNumber >= tictactoeSpaces.Length)
+        {
+            Debug.LogError("Invalid Button Index: " + WhichNumber);
+            return;
+        }
+
+        tictactoeSpaces[WhichNumber].image.sprite = PlayerIcons[WhoseTurn];
+        tictactoeSpaces[WhichNumber].interactable = false;
+        turnCount++;
+
+        CheckWinner(); // checks if somebody has won after every move has been played
+
+        WhoseTurn = (WhoseTurn == 0) ? 1 : 0;
+    }
+
+    void CheckWinner()
+    {
+        for (int i = 0; i < winningCombinations.GetLength(0); i++)
+        {
+            int a = winningCombinations[i, 0];
+            int b = winningCombinations[i, 1];
+            int c = winningCombinations[i, 2];
+
+            if (tictactoeSpaces[a].image.sprite != null &&
+                tictactoeSpaces[a].image.sprite == tictactoeSpaces[b].image.sprite &&
+                tictactoeSpaces[b].image.sprite == tictactoeSpaces[c].image.sprite)
             {
-                ShowWinner();
+                Debug.Log("Player " + (WhoseTurn == 0 ? "O" : "X") + " is the Ultimate  TICTACTOE CHAMPION");
+                ShowStrikethrough(a, b, c);
+                DisableBoard();
+                return;
             }
-            else
-            {
-                SwitchTurn(); // Switch turn to the next player
-            }
+        }
+
+        if (turnCount >= 9)
+        {
+            Debug.Log("It's a Draw!");
+            DisableBoard();
         }
     }
 
-    void SwitchTurn()
+    void DisableBoard()
     {
-        if (currentPlayer == "X")
+        foreach (Button button in tictactoeSpaces)
         {
-            currentPlayer = "O"; // Switch to O's turn
-        }
-        else
-        {
-            currentPlayer = "X"; // Switch to X's turn
+            button.interactable = false;
         }
     }
 
-    bool CheckWinner()
+    void ShowStrikethrough(int a, int b, int c)
     {
-        string[,] board = new string[3, 3];
-
-        // Fill board with button text
-        for (int i = 0; i < 9; i++)
+        if (strikeThrough == null)
         {
-            board[i / 3, i % 3] = Tiles[i].GetComponentInChildren<Text>().text;
+           // Debug.LogError("Strikethrough not assigned!");
+            //return;
         }
 
-        // Check for a line in the Rows
-        for (int i = 0; i < 3; i++)
-            if (board[i, 0] != "" && board[i, 0] == board[i, 1] && board[i, 1] == board[i, 2])
-                return true;
+        //Debug.Log("Strikethrough has been called");
 
-        //  Check for a line in the Columns
-        for (int i = 0; i < 3; i++)
-            if (board[0, i] != "" && board[0, i] == board[1, i] && board[1, i] == board[2, i])
-                return true;
-
-        // Check for a line in the  Diagonals
-        if (board[0, 0] != "" && board[0, 0] == board[1, 1] && board[1, 1] == board[2, 2])
-            return true;
-
-        if (board[0, 2] != "" && board[0, 2] == board[1, 1] && board[1, 1] == board[2, 0])
-            return true;
-
-        return false;
-    }
-
-    void ShowWinner()
-    {
-        winnercongrats.text = "Winner: " + currentPlayer;
-        winnerPanel.SetActive(true); // Show winner message ldkd
-    }
-
-    public void ResetBoard()
-    {
-        foreach (Button button in Tiles)
+        if (currentStrikethrough != null)
         {
-            button.GetComponentInChildren<Text>().text = "";
-            button.interactable = true;
+            Destroy(currentStrikethrough);
         }
 
-        currentPlayer = "X";
-        winnerPanel.SetActive(false);
+        
+        Transform canvasTransform = tictactoeSpaces[a].transform.root; // making sure that this damn line is in the canvas nkt
+        currentStrikethrough = Instantiate(strikeThrough, canvasTransform);
+        Vector3 posA = tictactoeSpaces[a].transform.position;
+        Vector3 posC = tictactoeSpaces[c].transform.position;
+        Vector3 midPoint = (posA + posC) / 2f;
+
+        currentStrikethrough.transform.position = midPoint;
+
+        Vector3 direction = posC - posA;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+
+        currentStrikethrough.transform.rotation = Quaternion.Euler(0, 0, angle);
+
+        
+        float lineLength = Vector3.Distance(posA, posC) + 40f;
+        RectTransform rt = currentStrikethrough.GetComponent<RectTransform>();
+        rt.sizeDelta = new Vector2(lineLength, 10);
+
+       
+        currentStrikethrough.transform.SetAsLastSibling();
+    }
+
+    
+    public void ResetGame() // scrapping literally everything
+    {
+        
+        WhoseTurn = 0;
+        turnCount = 0;
+
+        
+        if (currentStrikethrough != null)
+        {
+            Destroy(currentStrikethrough);
+        }
+
+        for (int i = 0; i < tictactoeSpaces.Length; i++)
+        {
+            tictactoeSpaces[i].interactable = true; 
+            tictactoeSpaces[i].GetComponent<Image>().sprite = null; 
+        }
+
+        Debug.Log("Game has been reset!");
     }
 }

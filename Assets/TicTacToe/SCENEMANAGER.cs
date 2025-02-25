@@ -10,4 +10,10 @@ public class SCENEMANAGER : MonoBehaviour
         Debug.Log("Start button has been clicked");
         SceneManager.LoadScene("TicTacToe");
     }
+
+    public void BacktoMainMenu()
+    {
+        Debug.Log("BacktoMainMenu has been clicked");
+        SceneManager.LoadScene("Start Screen");
+    }
 }
